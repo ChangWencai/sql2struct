@@ -12,21 +12,51 @@ export const getGoStructFieldType = (sqlFieldType: string, fieldMaps: kv): strin
 }
 
 // transfer sql table to go struct
+// export const toGoStruct = (sqlTable: SqlTable, tags: Array<string>, specialIdentifiers: Array<string>, fieldMaps: kv): GoStruct | null => {
+//   const fields: Array<GoStructField> = []
+//   sqlTable.fields.forEach((sqlField: SqlField) => {
+//     const tagKv: kv = {}
+//     tags.forEach((tag) => {
+//       tagKv[tag] = sqlField.name
+//     })
+//     const field: GoStructField = {
+//       name: specialIdentifiers.includes(sqlField.name) ? sqlField.name.toUpperCase() : camelCase(sqlField.name),
+//       type: getGoStructFieldType(sqlField.type, fieldMaps) as string,
+//       comment: sqlField.comment,
+//       tags: tagKv,
+//     }
+//     fields.push(field)
+//   })
+//
+//   const struct: GoStruct = {
+//     name: camelCase(sqlTable.name),
+//     fields,
+//     comment: sqlTable.comment,
+//   }
+//
+//   return struct
+// }
+
 export const toGoStruct = (sqlTable: SqlTable, tags: Array<string>, specialIdentifiers: Array<string>, fieldMaps: kv): GoStruct | null => {
   const fields: Array<GoStructField> = []
   sqlTable.fields.forEach((sqlField: SqlField) => {
     const tagKv: kv = {}
     tags.forEach((tag) => {
-      tagKv[tag] = sqlField.name
-    })
+      if (tag === 'gorm') {
+        tagKv[tag] = `column:${sqlField.name}`
+      } else {
+        tagKv[tag] = sqlField.name
+      }
+    });
+
     const field: GoStructField = {
       name: specialIdentifiers.includes(sqlField.name) ? sqlField.name.toUpperCase() : camelCase(sqlField.name),
       type: getGoStructFieldType(sqlField.type, fieldMaps) as string,
       comment: sqlField.comment,
       tags: tagKv,
     }
-    fields.push(field)
-  })
+    fields.push(field);
+  });
 
   const struct: GoStruct = {
     name: camelCase(sqlTable.name),
@@ -34,8 +64,9 @@ export const toGoStruct = (sqlTable: SqlTable, tags: Array<string>, specialIdent
     comment: sqlTable.comment,
   }
 
-  return struct
+  return struct;
 }
+
 
 // format go struct object to string
 export const formatGoStruct = (struct: GoStruct): string => {
